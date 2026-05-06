@@ -1,0 +1,12 @@
+2026-05-06 23:47:24,104 | ERROR | Backup system failure: Missing required environment values: PG_DATABASE, PG_USER, PG_PASSWORD
+2026-05-06 23:49:02,689 | INFO | Full backup created: backups/full/aam_cost_full_20260506_234902.dump
+2026-05-06 23:49:02,706 | INFO | Backup validation passed: backups/full/aam_cost_full_20260506_234902.dump
+2026-05-06 23:49:02,707 | INFO | Operation completed successfully.
+2026-05-06 23:49:14,127 | INFO | Backup validation passed: backups/full/aam_cost_full_20260506_234902.dump
+2026-05-06 23:49:14,127 | INFO | Operation completed successfully.
+2026-05-06 23:49:54,272 | ERROR | Backup system failure: pg_basebackup: error: connection to server at "127.0.0.1", port 5455 failed: FATAL:  no pg_hba.conf entry for replication connection from host "172.17.0.1", user "aam_user", no encryption
+2026-05-07 00:21:34,895 | INFO | Operation completed successfully.
+2026-05-07 00:21:56,851 | INFO | Full backup created: backups/full/aam_cost_full_20260507_002156.dump
+2026-05-07 00:21:56,867 | INFO | Backup validation passed: backups/full/aam_cost_full_20260507_002156.dump
+2026-05-07 00:21:56,867 | INFO | Operation completed successfully.
+2026-05-07 00:22:04,128 | INFO | Operation completed successfully.
