@@ -4,7 +4,7 @@ from config import Config
 
 
 logging.basicConfig(
-    filename="backup_system.log",
+    filename="/tmp/backup_system.log",
     level=logging.INFO,
     format="%(asctime)s | %(levelname)s | %(message)s",
 )

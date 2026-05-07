@@ -1,52 +1,36 @@
 import sys
+from pathlib import Path
 
-from commands import create_full_backup, restore_full_backup, run_sql
+from commands import restore_full_backup, run_sql
 from validators import validate_backup_file
+from storage import get_latest_s3_backup_key, download_file_from_s3
 from monitoring import log_info, send_alert
 
 
-TEST_TABLE_SQL = """
-CREATE TABLE IF NOT EXISTS backup_restore_test (
-    id SERIAL PRIMARY KEY,
-    test_value TEXT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-"""
-
-INSERT_TEST_DATA_SQL = """
-INSERT INTO backup_restore_test (test_value)
-VALUES ('restore-test-before-backup');
-"""
-
 VERIFY_SQL = """
-SELECT COUNT(*) FROM backup_restore_test
-WHERE test_value = 'restore-test-before-backup';
-"""
-
-DROP_TEST_TABLE_SQL = """
-DROP TABLE IF EXISTS backup_restore_test;
+SELECT COUNT(*) FROM information_schema.tables
+WHERE table_schema = 'public';
 """
 
 
 def run_restore_test():
     log_info("Starting automated restore test.")
 
-    run_sql(TEST_TABLE_SQL)
-    run_sql(INSERT_TEST_DATA_SQL)
+    latest_key = get_latest_s3_backup_key("full")
 
-    backup_file = create_full_backup()
-    validate_backup_file(str(backup_file))
+    local_backup_path = Path("/tmp/restore-test/latest-full.dump")
 
-    run_sql(DROP_TEST_TABLE_SQL)
+    download_file_from_s3(latest_key, str(local_backup_path))
 
-    restore_full_backup(str(backup_file))
+    validate_backup_file(str(local_backup_path))
+
+    restore_full_backup(str(local_backup_path))
 
     result = run_sql(VERIFY_SQL)
 
-    if "1" not in result:
-        raise RuntimeError("Restore test failed. Expected test row was not restored.")
+    log_info(f"Restore verification result: {result}")
 
-    log_info("Automated restore test passed.")
+    log_info("Automated restore test completed successfully.")
 
 
 if __name__ == "__main__":

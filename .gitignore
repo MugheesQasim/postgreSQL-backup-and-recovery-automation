@@ -1,0 +1,12 @@
+# Logs
+*.log
+logs/
+
+# Backup files
+*.backup
+*.bak
+backup/
+backups/
+
+# Environment variables
+.env

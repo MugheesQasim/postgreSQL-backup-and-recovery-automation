@@ -7,13 +7,13 @@ load_dotenv()
 
 
 class Config:
-    PG_HOST = os.getenv("PG_HOST", "127.0.0.1")
+    PG_HOST = os.getenv("PG_HOST")
     PG_PORT = os.getenv("PG_PORT", "5432")
     PG_DATABASE = os.getenv("PG_DATABASE")
     PG_USER = os.getenv("PG_USER")
     PG_PASSWORD = os.getenv("PG_PASSWORD")
 
-    BACKUP_DIR = Path(os.getenv("BACKUP_DIR", "./backups"))
+    BACKUP_DIR = Path(os.getenv("BACKUP_DIR", "/tmp/backups"))
     RETENTION_DAYS = int(os.getenv("RETENTION_DAYS", "14"))
 
     PG_DUMP_BIN = os.getenv("PG_DUMP_BIN", "pg_dump")
@@ -22,14 +22,20 @@ class Config:
     PG_COMBINEBACKUP_BIN = os.getenv("PG_COMBINEBACKUP_BIN", "pg_combinebackup")
     PSQL_BIN = os.getenv("PSQL_BIN", "psql")
 
+    S3_BUCKET = os.getenv("S3_BUCKET")
+    S3_PREFIX = os.getenv("S3_PREFIX", "postgres-backups")
+    AWS_REGION = os.getenv("AWS_REGION", "us-east-1")
+
     ALERT_WEBHOOK_URL = os.getenv("ALERT_WEBHOOK_URL", "")
 
 
 def validate_config():
     required = {
+        "PG_HOST": Config.PG_HOST,
         "PG_DATABASE": Config.PG_DATABASE,
         "PG_USER": Config.PG_USER,
         "PG_PASSWORD": Config.PG_PASSWORD,
+        "S3_BUCKET": Config.S3_BUCKET,
     }
 
     missing = [key for key, value in required.items() if not value]

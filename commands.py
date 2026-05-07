@@ -1,4 +1,5 @@
 import os
+import shutil
 import subprocess
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -30,7 +31,7 @@ def create_full_backup() -> Path:
     full_dir = Config.BACKUP_DIR / "full"
     full_dir.mkdir(parents=True, exist_ok=True)
 
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
     backup_file = full_dir / f"{Config.PG_DATABASE}_full_{timestamp}.dump"
 
     command = [
@@ -46,26 +47,18 @@ def create_full_backup() -> Path:
     run_command(command)
 
     log_info(f"Full backup created: {backup_file}")
+
     return backup_file
 
 
-def create_incremental_backup() -> Path:
-    """
-    PostgreSQL 18 native incremental physical backup wrapper.
-
-    Important:
-    - This requires PostgreSQL 18 server/client support.
-    - A previous full/base physical backup must exist.
-    - Real production setup also needs WAL archiving.
-    """
-
+def create_physical_backup() -> Path:
     validate_config()
 
-    incremental_dir = Config.BACKUP_DIR / "incremental"
-    incremental_dir.mkdir(parents=True, exist_ok=True)
+    physical_dir = Config.BACKUP_DIR / "physical"
+    physical_dir.mkdir(parents=True, exist_ok=True)
 
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    backup_path = incremental_dir / f"{Config.PG_DATABASE}_incremental_{timestamp}"
+    timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+    backup_path = physical_dir / f"{Config.PG_DATABASE}_physical_{timestamp}"
 
     command = [
         Config.PG_BASEBACKUP_BIN,
@@ -75,12 +68,22 @@ def create_incremental_backup() -> Path:
         "-D", str(backup_path),
         "--checkpoint=fast",
         "--progress",
+        "--write-recovery-conf",
     ]
 
     run_command(command)
 
-    log_info(f"Incremental/physical backup created: {backup_path}")
-    return backup_path
+    archive_path = shutil.make_archive(
+        str(backup_path),
+        "gztar",
+        root_dir=str(backup_path),
+    )
+
+    shutil.rmtree(backup_path)
+
+    log_info(f"Physical backup archive created: {archive_path}")
+
+    return Path(archive_path)
 
 
 def restore_full_backup(backup_file: str):
@@ -110,32 +113,30 @@ def restore_full_backup(backup_file: str):
     log_info(f"Full backup restored from: {backup_path}")
 
 
-def cleanup_old_backups():
+def cleanup_old_local_backups():
     Config.BACKUP_DIR.mkdir(parents=True, exist_ok=True)
 
-    cutoff = datetime.now() - timedelta(days=Config.RETENTION_DAYS)
+    cutoff = datetime.utcnow() - timedelta(days=Config.RETENTION_DAYS)
     deleted = 0
 
     for file in Config.BACKUP_DIR.rglob("*"):
         if file.is_file():
-            modified = datetime.fromtimestamp(file.stat().st_mtime)
+            modified = datetime.utcfromtimestamp(file.stat().st_mtime)
 
             if modified < cutoff:
                 file.unlink()
                 deleted += 1
 
-    log_info(f"Deleted {deleted} old backup file(s).")
+    log_info(f"Deleted {deleted} old local backup file(s).")
 
 
-def list_backups():
+def list_local_backups():
     Config.BACKUP_DIR.mkdir(parents=True, exist_ok=True)
 
-    backups = sorted(Config.BACKUP_DIR.rglob("*"), reverse=True)
-
-    files = [item for item in backups if item.is_file()]
+    files = [item for item in sorted(Config.BACKUP_DIR.rglob("*")) if item.is_file()]
 
     if not files:
-        log_info("No backups found.")
+        log_info("No local backups found.")
         return
 
     for file in files:

@@ -1,0 +1,34 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: aam-cost-full-backup
+  namespace: database-ops
+spec:
+  schedule: "0 2 * * *"
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 5
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        spec:
+          serviceAccountName: postgres-backup-sa
+          restartPolicy: OnFailure
+          containers:
+            - name: backup
+              image: <YOUR_ECR_REPO>/postgres-backup-recovery:latest
+              imagePullPolicy: IfNotPresent
+              command: ["python3", "backup.py", "full"]
+              envFrom:
+                - configMapRef:
+                    name: postgres-backup-config
+                - secretRef:
+                    name: postgres-backup-secret
+              resources:
+                requests:
+                  cpu: "250m"
+                  memory: "512Mi"
+                limits:
+                  cpu: "1"
+                  memory: "1Gi"

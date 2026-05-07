@@ -1,4 +1,5 @@
 from pathlib import Path
+
 from config import Config
 from commands import run_command
 from monitoring import log_info
@@ -31,7 +32,5 @@ def validate_pg_dump_archive(backup_path: Path):
     if not output.strip():
         raise RuntimeError("pg_restore --list returned empty output.")
 
-    required_keywords = ["TABLE", "SCHEMA", "SEQUENCE"]
-
-    if not any(keyword in output for keyword in required_keywords):
-        raise RuntimeError("Backup archive does not appear to contain database objects.")
+    if "TABLE" not in output and "SCHEMA" not in output:
+        raise RuntimeError("Backup archive does not appear to contain DB objects.")

@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-backup-config
+  namespace: database-ops
+data:
+  PG_HOST: "postgres-primary.database.svc.cluster.local"
+  PG_PORT: "5432"
+  PG_DATABASE: "aam_cost"
+
+  BACKUP_DIR: "/tmp/backups"
+  RETENTION_DAYS: "14"
+
+  PG_DUMP_BIN: "pg_dump"
+  PG_RESTORE_BIN: "pg_restore"
+  PG_BASEBACKUP_BIN: "pg_basebackup"
+  PG_COMBINEBACKUP_BIN: "pg_combinebackup"
+  PSQL_BIN: "psql"
+
+  S3_BUCKET: "company-db-backups"
+  S3_PREFIX: "aam-cost"
+  AWS_REGION: "us-east-1"

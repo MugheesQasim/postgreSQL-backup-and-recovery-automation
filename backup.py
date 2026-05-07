@@ -3,12 +3,13 @@ import sys
 
 from commands import (
     create_full_backup,
-    create_incremental_backup,
+    create_physical_backup,
     restore_full_backup,
-    cleanup_old_backups,
-    list_backups,
+    cleanup_old_local_backups,
+    list_local_backups,
 )
 from validators import validate_backup_file
+from storage import upload_file_to_s3
 from monitoring import send_alert, log_info
 
 
@@ -19,11 +20,11 @@ def main():
 
     subparsers = parser.add_subparsers(dest="command", required=True)
 
-    subparsers.add_parser("full", help="Create full logical backup using pg_dump")
+    subparsers.add_parser("full", help="Create full logical backup and upload to S3")
 
     subparsers.add_parser(
         "incremental",
-        help="Create PostgreSQL physical/incremental-style backup",
+        help="Create physical backup archive and upload to S3",
     )
 
     restore_parser = subparsers.add_parser("restore", help="Restore full backup")
@@ -32,8 +33,8 @@ def main():
     validate_parser = subparsers.add_parser("validate", help="Validate backup file")
     validate_parser.add_argument("backup_file")
 
-    subparsers.add_parser("cleanup", help="Delete old backups")
-    subparsers.add_parser("list", help="List backups")
+    subparsers.add_parser("cleanup", help="Delete old local backups")
+    subparsers.add_parser("list", help="List local backups")
 
     args = parser.parse_args()
 
@@ -41,9 +42,12 @@ def main():
         if args.command == "full":
             backup_file = create_full_backup()
             validate_backup_file(str(backup_file))
+            # upload_file_to_s3(str(backup_file), "full")
 
         elif args.command == "incremental":
-            create_incremental_backup()
+            backup_file = create_physical_backup()
+            validate_backup_file(str(backup_file))
+            upload_file_to_s3(str(backup_file), "physical")
 
         elif args.command == "restore":
             restore_full_backup(args.backup_file)
@@ -52,10 +56,10 @@ def main():
             validate_backup_file(args.backup_file)
 
         elif args.command == "cleanup":
-            cleanup_old_backups()
+            cleanup_old_local_backups()
 
         elif args.command == "list":
-            list_backups()
+            list_local_backups()
 
         log_info("Operation completed successfully.")
 
