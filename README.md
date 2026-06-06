@@ -2,7 +2,7 @@
 
 Automated PostgreSQL backup, validation, S3 upload, and restore testing using Python + PostgreSQL native tools (`pg_dump`, `pg_restore`, `pg_basebackup`, `psql`).
 
-This project is designed for production-style operations and portfolio demonstration of:
+This project is designed for production-style operations:
 - logical and physical backup flows
 - backup integrity checks
 - cloud object storage integration (S3)
@@ -163,13 +163,6 @@ The `k8s/` folder includes:
 - Alerts are sent only when `ALERT_WEBHOOK_URL` is set
 - Failures call `send_alert(...)` from CLI and restore test entrypoints
 
-## Portfolio Talking Points
-
-When presenting this project, emphasize:
-- backup strategy depth (logical + physical)
-- restore-readiness checks, not just backup creation
-- cloud integration and security (SSE encryption + IAM role usage)
-- operational automation via CronJobs and retention policies
 
 ## License
 
